@@ -4,8 +4,11 @@ import unicodedata
 """
     1.(cria_lista_palavras) Recebe uma string com o nome do arquivo e devolve uma lista contendo as palavras do arquivo.
 """
+
 def cria_lista_palavras(nome_arquivo):
+    # Abre o arquivo de texto com as palavras e converte ele para UTF-8.
     with open(nome_arquivo, 'r',encoding='utf-8' ) as file:
+        # Retorna lista com as palavras sem espaço e transforma os caracteres em minusculo. 
         return [linha.strip().lower() for linha in file]
 
 """
@@ -17,22 +20,27 @@ def cria_lista_palavras(nome_arquivo):
 """
 
 def checa_tentativa(palavra, chute):
+    # Lista de feedback.
     feedback = [0] * 5
+    # Chama a função resposavel por remover os acentos das palavras recebidas na função 'palavra, chute'.
     palavraVerificada = comparar_letras(palavra)
     chuteVerificado = comparar_letras(chute)
     
+    # Atribui a váriavel uma lista com a palavra sorteada
     letras_disponiveis = list(palavraVerificada)
-    
+    # Percorre cada letra do 'chute' e verifica se a letra está na posição correta da palavra sorteada, se sim, atribui '1' ao feedback[i].
     for i in range(5):
         if chuteVerificado[i] == palavraVerificada[i]:
             feedback[i] = 1
             letras_disponiveis[i] = None  # Remove a letra usada
-    
+    # Percorre um range de 5
     for i in range(5):
+        # Verifica se a letra na posição i do 'chute' não foi marcada como correta na posição.
+        # Verifica a letra esta presente em alguma outra posição da palavra secreta, se sim, atribui '2' ao feedback[i] e remove ela, para evitar que o codigo conte mais de uma vez a mesma letra.
         if feedback[i] == 0 and chuteVerificado[i] in letras_disponiveis:
             feedback[i] = 2
             letras_disponiveis[letras_disponiveis.index(chuteVerificado[i])] = None  # Remove a letra usada
-    
+    # Retorna feedback.
     return feedback
 
 """
@@ -42,9 +50,13 @@ def checa_tentativa(palavra, chute):
 """
 
 def imprime_resultado(lista_tentativas):
+    # Inicia tupla com simbolos utilizados 
     simbolos = {1: '*', 2: '+', 0: '_'}
+    # Percorre lista de tentativas.
     for chute, feedback in lista_tentativas:
+        # Percorre a tupla 'simbolos' e atribui o valor a váriavel feedback
         resultado = ''.join(simbolos[f] for f in feedback)
+        # Printa chute e resultado.
         print(f"{chute}")
         print(f"{resultado}")
 
@@ -53,8 +65,11 @@ def imprime_resultado(lista_tentativas):
 """
 
 def atualiza_teclado(chute, feedback, teclado):
+    # Remove acentos da palavra 'chute'.
     chuteVerificado = comparar_letras(chute)
+    # Percorre range de 5
     for i in range(5):
+        # Verifica se as letras do 'chute' não pertencem na palavra secreta, se não, percorre as letras do teclado e substitui a letra por um espaço vazio ' '.
         if feedback[i] == 0:
             tecla = chuteVerificado[i]
             for linha in range(len(teclado)):
@@ -65,7 +80,9 @@ def atualiza_teclado(chute, feedback, teclado):
 """
 
 def comparar_letras(texto):
-    texto = texto.replace('ç', 'c').replace('Ç', 'C')  # Substituir 'ç' por 'c' antes de normalizar
+    # Verifica se palavra recebida possui 'ç' e substitui por 'c'.
+    texto = texto.replace('ç', 'c').replace('Ç', 'C')
+    # Retorna a palavra recebida na função sem acentos.
     return unicodedata.normalize('NFKD', texto).encode('ASCII', 'ignore').decode('ASCII').lower()
 
 
@@ -75,6 +92,7 @@ def comparar_letras(texto):
 """
 
 def obter_idioma():
+    # Laço de repetição para verificar a resposta do usuário entre P e I, se for uma resposta inválida, refaz a pergunta.
     while True:
         idioma = input("Qual o idioma (I para inglês ou P para português)? ").strip().upper()
         if idioma in {'I', 'P'}:
@@ -91,6 +109,7 @@ def main():
     # Carrega o arquivo de texto contendo as palavras de cada lingua
     nome_arquivo = 'words.txt' if idioma == 'I' else 'palavras.txt'
     
+    # Recebe as palavras existentes no arquivo txt e transfere para uma lista 'palavras_normalizadas' sem acentos e espaços.
     palavras = cria_lista_palavras(nome_arquivo)
     palavras_normalizadas = [comparar_letras(palavra) for palavra in palavras]
     
@@ -114,22 +133,29 @@ def main():
         chute = input("Digite a palavra: ").strip().lower()
         chute_normalizado = comparar_letras(chute)
         
+        # Verifica se a palavra recebida 'chute' tem tamanho diferente de 5 ou se a palavra 'chute' não existe na lista 'palavras_normalizadas' e devolve um 'erro'.
         if len(chute) != 5 or chute_normalizado not in palavras_normalizadas:
             print("Palavra inválida!")
             continue
         
+        # Atribui a feedback a 'palavra secreta' e o 'chute'.
         feedback = checa_tentativa(palavra_sorteada_normalizada, chute_normalizado)
+        # inicia uma tupla com os valores [chute, feedback].
         lista_tentativas.append([chute, feedback])
         
+        # Chama a função responsável por atualizar e retirar as letras inexistentes na palavra secreta do teclado.
         atualiza_teclado(chute, feedback, teclado)
         
+        # Verifica se a palavra 'chute' é igual a palavra secreta, se sim, imprime as tentativas anteriores do usuário e finaliza o jogo como vitoria.
         if chute_normalizado == palavra_sorteada_normalizada:
             imprime_resultado(lista_tentativas)
             print("PARABÉNS!")
             break
+    # Caso atingir o número maximo de tentavivas e finalizar o 'for' Imprime na tela a lista de tentativas do usuário e finaliza o jogo como derrota.    
     else:
         imprime_resultado(lista_tentativas)
         print(f"Você perdeu. A palavra era {palavra_sorteada}.")
 
+# Inicia o jogo
 if __name__ == "__main__":
     main()
